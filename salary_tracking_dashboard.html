@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salary Tracking Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Sarabun', sans-serif;
+    background: #f0f4f8;
+    min-height: 100vh;
+    padding: 24px;
+    color: #2d3748;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #4a5568;
+    letter-spacing: 0.5px;
+  }
+  .header p {
+    font-size: 13px;
+    color: #a0aec0;
+    margin-top: 4px;
+  }
+
+  /* Dropdown */
+  .selector-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 28px;
+  }
+  .selector-wrap select {
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-size: 15px;
+    font-family: 'Sarabun', sans-serif;
+    font-weight: 600;
+    color: #4a5568;
+    cursor: pointer;
+    outline: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: border-color 0.2s;
+    min-width: 260px;
+  }
+  .selector-wrap select:focus { border-color: #90cdf4; }
+
+  /* Summary Cards */
+  .summary-cards {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 18px 28px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    min-width: 140px;
+  }
+  .card .num {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .card .label {
+    font-size: 12px;
+    color: #a0aec0;
+    margin-top: 6px;
+    font-weight: 500;
+  }
+  .card.done .num { color: #2d3748; }
+  .card.active .num { color: #f6ad55; }
+  .card.wait .num { color: #cbd5e0; }
+  .card.days .num { color: #81e6d9; }
+
+  /* Progress bar */
+  .progress-wrap {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px 24px;
+    margin-bottom: 28px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 28px;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #a0aec0;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .progress-bar-bg {
+    background: #edf2f7;
+    border-radius: 99px;
+    height: 14px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #81e6d9, #4fd1c5);
+    transition: width 0.6s ease;
+  }
+
+  /* Timeline */
+  .timeline-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .step-group {
+    margin-bottom: 8px;
+  }
+
+  .step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    position: relative;
+  }
+
+  /* Left column: icon + line */
+  .step-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 48px;
+    flex-shrink: 0;
+  }
+  .step-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 700;
+    flex-shrink: 0;
+    z-index: 1;
+    position: relative;
+  }
+  .step-icon.done {
+    background: #2d3748;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(45,55,72,0.3);
+  }
+  .step-icon.active {
+    background: #fef3c7;
+    border: 2.5px solid #f6ad55;
+    color: #d69e2e;
+  }
+  .step-icon.wait {
+    background: #f7fafc;
+    border: 2px dashed #cbd5e0;
+    color: #cbd5e0;
+  }
+
+  .step-line {
+    width: 2px;
+    flex: 1;
+    min-height: 20px;
+    background: #e2e8f0;
+    margin-top: 2px;
+  }
+  .step-line.done-line { background: #4a5568; }
+
+  /* Right content */
+  .step-content {
+    flex: 1;
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    margin-left: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .step-content.done {
+    border-left: 4px solid #2d3748;
+    opacity: 0.85;
+  }
+  .step-content.active {
+    border-left: 4px solid #f6ad55;
+  }
+  .step-content.wait {
+    border-left: 4px solid #e2e8f0;
+    opacity: 0.6;
+  }
+
+  /* Blink animation */
+  @keyframes blink-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(246,173,85,0); }
+    50% { box-shadow: 0 0 0 6px rgba(246,173,85,0.25); }
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+  }
+  .step-content.active {
+    animation: blink-glow 1.8s infinite;
+  }
+  .step-icon.active {
+    animation: pulse-dot 1.5s infinite;
+  }
+
+  .step-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .step-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2d3748;
+  }
+  .step-content.wait .step-title { color: #a0aec0; }
+
+  .step-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+  .badge-done { background: #e2e8f0; color: #4a5568; }
+  .badge-active { background: #fef3c7; color: #b7791f; }
+  .badge-wait { background: #f7fafc; color: #cbd5e0; border: 1px solid #e2e8f0; }
+
+  .step-meta {
+    margin-top: 8px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #718096;
+  }
+  .meta-item .icon { font-size: 12px; }
+
+  .days-badge {
+    display: inline-block;
+    background: #ebf8ff;
+    color: #2b6cb0;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 99px;
+    padding: 2px 10px;
+    margin-left: auto;
+  }
+  .step-content.wait .days-badge { background: #f7fafc; color: #cbd5e0; }
+  .step-content.done .days-badge { background: #e6fffa; color: #2c7a7b; }
+
+  /* Sub-steps */
+  .sub-step {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #e2e8f0;
+  }
+  .sub-step-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    font-size: 12.5px;
+  }
+  .sub-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .sub-dot.done { background: #4a5568; }
+  .sub-dot.active { background: #f6ad55; animation: pulse-dot 1.5s infinite; }
+  .sub-dot.wait { background: #e2e8f0; border: 1px dashed #cbd5e0; }
+
+  .sub-name { flex: 1; color: #4a5568; }
+  .sub-name.wait-text { color: #cbd5e0; }
+  .sub-dates { font-size: 11px; color: #a0aec0; }
+  .sub-days { font-size: 11px; font-weight: 700; color: #4299e1; margin-left: 4px; }
+  .sub-days.done-days { color: #68d391; }
+
+  /* Active indicator label */
+  .active-label {
+    position: absolute;
+    top: 0; right: 0;
+    background: linear-gradient(135deg, #fef3c7, #fed7aa);
+    color: #c05621;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 0 14px 0 10px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Responsible tag */
+  .resp-tag {
+    font-size: 11px;
+    background: #f0fff4;
+    color: #276749;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-weight: 500;
+  }
+  .step-content.wait .resp-tag { background: #f7fafc; color: #cbd5e0; }
+
+  .no-data { text-align: center; color: #a0aec0; padding: 40px; font-size: 14px; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    body { padding: 12px; }
+    .card .num { font-size: 28px; }
+    .step-title { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📋 ติดตามการเลื่อนเงินเดือน</h1>
+  <p>Salary Increment Tracking — สสจ.</p>
+</div>
+
+<div class="selector-wrap">
+  <select id="roundSelect" onchange="renderDashboard()">
+    <option value="oct68">รอบ 1 ต.ค. 2568</option>
+    <option value="apr68">รอบ 1 เม.ย. 2568</option>
+    <option value="oct69">รอบ 1 ต.ค. 2569</option>
+  </select>
+</div>
+
+<div class="summary-cards" id="summaryCards"></div>
+
+<div class="progress-wrap">
+  <div class="progress-label">
+    <span>ความคืบหน้า</span>
+    <span id="progressPct">0%</span>
+  </div>
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+  </div>
+</div>
+
+<div class="timeline-container" id="timeline"></div>
+
+<script>
+const data = {
+  oct68: {
+    title: "รอบ 1 ต.ค. 2568",
+    steps: [
+      {
+        id: 1,
+        name: "คำสั่งเลื่อนขั้นเงินเดือน",
+        status: "done",
+        dateReceive: "7 ม.ค. 2569",
+        dateSend: "15 ม.ค. 2569",
+        days: 8,
+        responsible: "ผู้ว่าราชการจังหวัด",
+        updatedBy: "สมใจ",
+        subs: []
+      },
+      {
+        id: 2,
+        name: "เตรียมข้อมูลทำคำสั่งปรับเงินเดือน",
+        status: "done",
+        dateReceive: "15 ม.ค. 2569",
+        dateSend: "10 ก.พ. 2569",
+        days: 26,
+        responsible: "งานบุคคลากร",
+        updatedBy: "สมหญิง",
+        subs: []
+      },
+      {
+        id: 3,
+        name: "คำสั่งปรับเงินเดือน",
+        status: "done",
+        dateReceive: "13 ก.พ. 2569",
+        dateSend: "13 ก.พ. 2569",
+        days: 0,
+        responsible: "สสจ.",
+        updatedBy: "สมทรง",
+        subs: []
+      },
+      {
+        id: 4,
+        name: "หน่วยบริการ ประเมินเลื่อนขั้นเงินเดือน",
+        status: "done",
+        dateReceive: "14 ก.พ. 2569",
+        dateSend: "20 ก.พ. 2569",
+        days: 6,
+        responsible: "งานบุคคลากร",
+        updatedBy: "สมหญิง",
+        subs: []
+      },
+      {
+        id: 5,
+        name: "หน่วยบริการส่งกลับข้อมูลเลื่อนขึ้นเงินเดือน",
+        status: "done",
+        dateReceive: "20 ก.พ. 2569",
+        dateSend: "20 มี.ค. 2569",
+        days: 28,
+        responsible: "หน่วยบริการ",
+        subs: [
+          { name: "รพ.ท่ากระดาน", status: "done", dateReceive: "20 ก.พ. 2569", dateSend: "28 ก.พ. 2569", days: 8, updatedBy: "สมรักษ์" },
+          { name: "รพ.บ่อพลอย", status: "done", dateReceive: "20 ก.พ. 2569", dateSend: "1 มี.ค. 2569", days: 9, updatedBy: "สมพร" },
+          { name: "สสอ.เลาขวัญ", status: "done", dateReceive: "20 ก.พ. 2569", dateSend: "7 มี.ค. 2569", days: 15, updatedBy: "สมบูรณ์" },
+          { name: "สสจ.", status: "done", dateReceive: "20 ก.พ. 2569", dateSend: "20 มี.ค. 2569", days: 28, updatedBy: "สมทรง" },
+        ]
+      },
+      {
+        id: 6,
+        name: "สรุปข้อมูลวงเงิน & ส่งคืนวงเงินเพิ่มให้หน่วยบริการ",
+        status: "done",
+        dateReceive: "20 มี.ค. 2569",
+        dateSend: "24 มี.ค. 2569",
+        days: 4,
+        responsible: "งานบุคคลากร",
+        updatedBy: "สมหญิง",
+        subs: []
+      },
+      {
+        id: 7,
+        name: "หน่วยบริการส่งกลับข้อมูลเลื่อนขึ้นเงินเดือนรอบวงเงินเพิ่ม",
+        status: "active",
+        dateReceive: "24 มี.ค. 2569",
+        dateSend: null,
+        days: null,
+        responsible: "หน่วยบริการ",
+        subs: [
+          { name: "รพ.ท่ากระดาน", status: "done", dateReceive: "24 มี.ค. 2569", dateSend: "28 มี.ค. 2569", days: 4, updatedBy: "สมรักษ์" },
+          { name: "รพ.บ่อพลอย", status: "done", dateReceive: "24 มี.ค. 2569", dateSend: "31 มี.ค. 2569", days: 7, updatedBy: "สมพร" },
+          { name: "สสอ.เลาขวัญ", status: "active", dateReceive: "24 มี.ค. 2569", dateSend: null, days: null, updatedBy: null },
+          { name: "สสจ.", status: "active", dateReceive: "24 มี.ค. 2569", dateSend: null, days: null, updatedBy: null },
+        ]
+      },
+      {
+        id: 8,
+        name: "คีย์ข้อมูล ตรวจสอบ จัดทำคำสั่ง",
+        status: "wait",
+        dateReceive: null,
+        dateSend: null,
+        days: null,
+        responsible: "งานบุคคลากร",
+        subs: []
+      },
+      {
+        id: 9,
+        name: "เสนอผู้ว่าราชการจังหวัดลงนาม",
+        status: "wait",
+        dateReceive: null,
+        dateSend: null,
+        days: null,
+        responsible: "งานบุคคลากร",
+        subs: []
+      },
+      {
+        id: 10,
+        name: "ลงข้อมูลและตรวจสอบเงิน จัดทำคำสั่ง",
+        status: "wait",
+        dateReceive: null,
+        dateSend: null,
+        days: null,
+        responsible: "งานบุคคลากร",
+        subs: []
+      },
+      {
+        id: 11,
+        name: "คำสั่งได้รับการอนุมัติ",
+        status: "wait",
+        dateReceive: null,
+        dateSend: null,
+        days: null,
+        responsible: "สสจ.",
+        subs: []
+      },
+    ]
+  },
+  apr68: {
+    title: "รอบ 1 เม.ย. 2568",
+    steps: [
+      { id:1, name:"คำสั่งเลื่อนขั้นเงินเดือน", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"ผู้ว่าราชการจังหวัด", subs:[] },
+      { id:2, name:"เตรียมข้อมูลทำคำสั่งปรับเงินเดือน", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"งานบุคคลากร", subs:[] },
+      { id:3, name:"คำสั่งปรับเงินเดือน", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"สสจ.", subs:[] },
+      { id:4, name:"หน่วยบริการ ประเมินเลื่อนขั้นเงินเดือน", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"งานบุคคลากร", subs:[] },
+      { id:5, name:"หน่วยบริการส่งกลับข้อมูลเลื่อนขึ้นเงินเดือน", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"หน่วยบริการ",
+        subs:[
+          { name:"รพ.ท่ากระดาน", status:"wait", dateReceive:null, dateSend:null, days:null },
+          { name:"รพ.บ่อพลอย", status:"wait", dateReceive:null, dateSend:null, days:null },
+          { name:"สสอ.เลาขวัญ", status:"wait", dateReceive:null, dateSend:null, days:null },
+          { name:"สสจ.", status:"wait", dateReceive:null, dateSend:null, days:null },
+        ]
+      },
+      { id:6, name:"สรุปข้อมูลวงเงิน & ส่งคืนวงเงินเพิ่มให้หน่วยบริการ", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"งานบุคคลากร", subs:[] },
+      { id:7, name:"หน่วยบริการส่งกลับข้อมูลเลื่อนขึ้นเงินเดือนรอบวงเงินเพิ่ม", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"หน่วยบริการ",
+        subs:[
+          { name:"รพ.ท่ากระดาน", status:"wait", dateReceive:null, dateSend:null, days:null },
+          { name:"รพ.บ่อพลอย", status:"wait", dateReceive:null, dateSend:null, days:null },
+          { name:"สสอ.เลาขวัญ", status:"wait", dateReceive:null, dateSend:null, days:null },
+          { name:"สสจ.", status:"wait", dateReceive:null, dateSend:null, days:null },
+        ]
+      },
+      { id:8, name:"คีย์ข้อมูล ตรวจสอบ จัดทำคำสั่ง", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"งานบุคคลากร", subs:[] },
+      { id:9, name:"เสนอผู้ว่าราชการจังหวัดลงนาม", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"งานบุคคลากร", subs:[] },
+      { id:10, name:"ลงข้อมูลและตรวจสอบเงิน จัดทำคำสั่ง", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"งานบุคคลากร", subs:[] },
+      { id:11, name:"คำสั่งได้รับการอนุมัติ", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"สสจ.", subs:[] },
+    ]
+  },
+  oct69: {
+    title: "รอบ 1 ต.ค. 2569",
+    steps: [
+      { id:1, name:"คำสั่งเลื่อนขั้นเงินเดือน", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"ผู้ว่าราชการจังหวัด", subs:[] },
+      { id:2, name:"เตรียมข้อมูลทำคำสั่งปรับเงินเดือน", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"งานบุคคลากร", subs:[] },
+      { id:3, name:"คำสั่งปรับเงินเดือน", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"สสจ.", subs:[] },
+      { id:4, name:"หน่วยบริการ ประเมินเลื่อนขั้นเงินเดือน", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"งานบุคคลากร", subs:[] },
+      { id:5, name:"หน่วยบริการส่งกลับข้อมูลเลื่อนขึ้นเงินเดือน", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"หน่วยบริการ",
+        subs:[
+          { name:"รพ.ท่ากระดาน", status:"wait", dateReceive:null, dateSend:null, days:null },
+          { name:"รพ.บ่อพลอย", status:"wait", dateReceive:null, dateSend:null, days:null },
+          { name:"สสอ.เลาขวัญ", status:"wait", dateReceive:null, dateSend:null, days:null },
+          { name:"สสจ.", status:"wait", dateReceive:null, dateSend:null, days:null },
+        ]
+      },
+      { id:6, name:"สรุปข้อมูลวงเงิน & ส่งคืนวงเงินเพิ่มให้หน่วยบริการ", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"งานบุคคลากร", subs:[] },
+      { id:7, name:"หน่วยบริการส่งกลับข้อมูลเลื่อนขึ้นเงินเดือนรอบวงเงินเพิ่ม", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"หน่วยบริการ",
+        subs:[
+          { name:"รพ.ท่ากระดาน", status:"wait", dateReceive:null, dateSend:null, days:null },
+          { name:"รพ.บ่อพลอย", status:"wait", dateReceive:null, dateSend:null, days:null },
+          { name:"สสอ.เลาขวัญ", status:"wait", dateReceive:null, dateSend:null, days:null },
+          { name:"สสจ.", status:"wait", dateReceive:null, dateSend:null, days:null },
+        ]
+      },
+      { id:8, name:"คีย์ข้อมูล ตรวจสอบ จัดทำคำสั่ง", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"งานบุคคลากร", subs:[] },
+      { id:9, name:"เสนอผู้ว่าราชการจังหวัดลงนาม", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"งานบุคคลากร", subs:[] },
+      { id:10, name:"ลงข้อมูลและตรวจสอบเงิน จัดทำคำสั่ง", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"งานบุคคลากร", subs:[] },
+      { id:11, name:"คำสั่งได้รับการอนุมัติ", status:"wait", dateReceive:null, dateSend:null, days:null, responsible:"สสจ.", subs:[] },
+    ]
+  }
+};
+
+function getStepOverallStatus(step) {
+  if (step.subs && step.subs.length > 0) {
+    const allDone = step.subs.every(s => s.status === 'done');
+    const anyActive = step.subs.some(s => s.status === 'active');
+    const anyDone = step.subs.some(s => s.status === 'done');
+    if (allDone) return 'done';
+    if (anyActive || anyDone) return 'active';
+    return 'wait';
+  }
+  return step.status;
+}
+
+function iconForStatus(status, id) {
+  if (status === 'done') return '✓';
+  if (status === 'active') return id;
+  return id;
+}
+
+function badgeLabel(status) {
+  if (status === 'done') return 'เสร็จแล้ว';
+  if (status === 'active') return 'กำลังดำเนินการ';
+  return 'รอดำเนินการ';
+}
+
+function renderDashboard() {
+  const key = document.getElementById('roundSelect').value;
+  const round = data[key];
+  const steps = round.steps;
+
+  // Count statuses (leaf-level)
+  let doneCount = 0, activeCount = 0, waitCount = 0, totalDays = 0;
+  steps.forEach(s => {
+    const st = getStepOverallStatus(s);
+    if (st === 'done') doneCount++;
+    else if (st === 'active') activeCount++;
+    else waitCount++;
+    if (s.days != null) totalDays += s.days;
+  });
+
+  const pct = Math.round((doneCount / steps.length) * 100);
+
+  // Summary cards
+  document.getElementById('summaryCards').innerHTML = `
+    <div class="card done">
+      <div class="num">${doneCount}</div>
+      <div class="label">✅ เสร็จแล้ว</div>
+    </div>
+    <div class="card active">
+      <div class="num">${activeCount}</div>
+      <div class="label">⚡ กำลังดำเนินการ</div>
+    </div>
+    <div class="card wait">
+      <div class="num">${waitCount}</div>
+      <div class="label">⬜ รอดำเนินการ</div>
+    </div>
+    <div class="card days">
+      <div class="num">${totalDays}</div>
+      <div class="label">📅 วันรวมที่ใช้</div>
+    </div>
+  `;
+
+  // Progress
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('progressFill').style.width = pct + '%';
+
+  // Timeline
+  let html = '';
+  steps.forEach((step, idx) => {
+    const status = getStepOverallStatus(step);
+    const isLast = idx === steps.length - 1;
+    const lineClass = status === 'done' ? 'done-line' : '';
+
+    let metaHtml = '';
+    if (step.dateReceive) {
+      metaHtml += `<div class="meta-item"><span class="icon">📥</span>${step.dateReceive}</div>`;
+    }
+    if (step.dateSend) {
+      metaHtml += `<div class="meta-item"><span class="icon">📤</span>${step.dateSend}</div>`;
+    }
+    if (step.updatedBy) {
+      metaHtml += `<div class="meta-item"><span class="icon">👤</span>${step.updatedBy}</div>`;
+    }
+
+    let daysHtml = step.days != null ? `<span class="days-badge">${step.days} วัน</span>` : '';
+
+    let subsHtml = '';
+    if (step.subs && step.subs.length > 0) {
+      subsHtml = '<div class="sub-step">';
+      step.subs.forEach(sub => {
+        const nameClass = sub.status === 'wait' ? 'sub-name wait-text' : 'sub-name';
+        const daysClass = sub.status === 'done' ? 'sub-days done-days' : 'sub-days';
+        const daysStr = sub.days != null ? `<span class="${daysClass}">${sub.days}วัน</span>` : '';
+        const dates = sub.dateReceive ? `${sub.dateReceive}${sub.dateSend ? ' → '+sub.dateSend : ''}` : '';
+        subsHtml += `
+          <div class="sub-step-item">
+            <div class="sub-dot ${sub.status}"></div>
+            <span class="${nameClass}">${sub.name}</span>
+            <span class="sub-dates">${dates}</span>
+            ${daysStr}
+          </div>`;
+      });
+      subsHtml += '</div>';
+    }
+
+    const activeLabel = status === 'active' ? '<div class="active-label">🔴 LIVE</div>' : '';
+    const respTag = step.responsible ? `<span class="resp-tag">🏢 ${step.responsible}</span>` : '';
+
+    html += `
+      <div class="step-group">
+        <div class="step-item">
+          <div class="step-left">
+            <div class="step-icon ${status}">${iconForStatus(status, step.id)}</div>
+            ${!isLast ? `<div class="step-line ${lineClass}"></div>` : ''}
+          </div>
+          <div class="step-content ${status}">
+            ${activeLabel}
+            <div class="step-header">
+              <span class="step-title">ขั้นตอน ${step.id} — ${step.name}</span>
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                ${daysHtml}
+                <span class="step-badge badge-${status}">${badgeLabel(status)}</span>
+              </div>
+            </div>
+            ${metaHtml || subsHtml ? `
+            <div class="step-meta">
+              ${metaHtml}
+              ${respTag}
+            </div>` : ''}
+            ${subsHtml}
+          </div>
+        </div>
+      </div>`;
+  });
+
+  document.getElementById('timeline').innerHTML = html;
+}
+
+renderDashboard();
+</script>
+</body>
+</html>
