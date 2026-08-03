@@ -107,12 +107,11 @@
 
 <div class="header">
   <h1>📋 ติดตามการเลื่อนเงินเดือน</h1>
-  <p>Salary Increment Tracking — สสจ.กาญจนบุรี &nbsp;|&nbsp; อัปเดตล่าสุด: 13/05/2026 11:00</p>
+  <p>Salary Increment Tracking — สสจ.กาญจนบุรี &nbsp;|&nbsp; อัปเดตล่าสุด: 03/08/2026 15:38</p>
 </div>
 
 <div class="top-bar">
   <select id="roundSelect" onchange="renderAll()">
-    <option value="oct68">รอบ 1 ต.ค. 2568</option>
     <option value="apr69">รอบ 1 เม.ย. 2569</option>
     <option value="oct69">รอบ 1 ต.ค. 2569</option>
   </select>
@@ -137,94 +136,29 @@ function allWait() {
   return [...mkWait(SSO,"สสอ."), ...mkWait(RPH,"รพ."), {name:"สสจ.",type:"สสจ.",status:"wait",dateReceive:null,dateSend:null,days:null,updatedBy:null}];
 }
 
-// ─── oct68 step5 subs ─────────────────────────────────────────────
-const s5oct68 = [
-  ...SSO.map((n,i)=>({ name:n, type:"สสอ.", status:"done", dateReceive:"20 ก.พ. 2569",
-    dateSend:["17 มี.ค. 2569","16 มี.ค. 2569","7 มี.ค. 2569","20 มี.ค. 2569","9 มี.ค. 2569","22 ก.พ. 2569","24 ก.พ. 2569","28 ก.พ. 2569","7 มี.ค. 2569","7 มี.ค. 2569","17 มี.ค. 2569","27 มี.ค. 2569","12 มี.ค. 2569"][i],
-    days:[25,24,15,28,17,2,4,8,15,15,25,35,20][i],
-    updatedBy:["สมยศ","สมพงษ์","สมควร","สมมมติ","สมฤดี","สมฤทัย","สมศักดิ์","สมฤกษ์","สมชัย","สมประสงค์","สมหมาย","สมศรี","สมบูรณ์"][i] })),
-  ...RPH.map((n,i)=>({ name:n, type:"รพ.", status:"done", dateReceive:"20 ก.พ. 2569",
-    dateSend:["13 มี.ค. 2569","25 ก.พ. 2569","7 มี.ค. 2569","7 มี.ค. 2569","7 มี.ค. 2569","27 มี.ค. 2569","17 มี.ค. 2569","10 มี.ค. 2569","9 มี.ค. 2569","3 มี.ค. 2569","3 มี.ค. 2569","3 มี.ค. 2569","28 ก.พ. 2569","1 มี.ค. 2569"][i],
-    days:[21,5,15,15,15,35,25,18,17,11,11,11,8,9][i],
-    updatedBy:["พิใจ","พิจารย์","พิรักษ์","พิเชษฐ์","พิราบ","พิสัย","พิพัฒน์","พิพิฐ","พินิจ","พิเคราะห์","พิพากษ์","พิพาน","พิพิม","พิมาย"][i] })),
-  { name:"สสจ.", type:"สสจ.", status:"done", dateReceive:"20 ก.พ. 2569", dateSend:"20 มี.ค. 2569", days:28, updatedBy:"พิชัย" },
-];
-
-// ─── oct68 step7 subs (updated — all done) ───────────────────────────
-const s7oct68 = [
-  // SSO
-  {name:"สสอ.ท่ามะกา",         type:"สสอ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"17 เม.ย. 2569",days:24,updatedBy:"สมยศ"},
-  {name:"สสอ.เมือง กาญจนบุรี", type:"สสอ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"16 เม.ย. 2569",days:23,updatedBy:"สมพงษ์"},
-  {name:"สสอ.ท่าม่วง",         type:"สสอ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"17 เม.ย. 2569",days:24,updatedBy:"สมควร"},
-  {name:"สสอ.พนมทวน",          type:"สสอ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"28 มี.ค. 2569",days:4, updatedBy:"สมมมติ"},
-  {name:"สสอ.ด่านมะขามเตี้ย",  type:"สสอ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"29 มี.ค. 2569",days:5, updatedBy:"สมฤดี"},
-  {name:"สสอ.ห้วยกระเจา",      type:"สสอ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"17 เม.ย. 2569",days:24,updatedBy:"สมฤทัย"},
-  {name:"สสอ.เลาขวัญ",         type:"สสอ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"17 เม.ย. 2569",days:24,updatedBy:"สมศักดิ์"},
-  {name:"สสอ.บ่อพลอย",         type:"สสอ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"17 เม.ย. 2569",days:24,updatedBy:"สมฤกษ์"},
-  {name:"สสอ.หนองปรือ",        type:"สสอ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"7 เม.ย. 2569", days:14,updatedBy:"สมชัย"},
-  {name:"สสอ.ศรีสวัสดิ์",      type:"สสอ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"27 เม.ย. 2569",days:34,updatedBy:"สมประสงค์"},
-  {name:"สสอ.ไทรโยค",          type:"สสอ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"27 เม.ย. 2569",days:34,updatedBy:"สมหมาย"},
-  {name:"สสอ.ทองผาภูมิ",       type:"สสอ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"26 มี.ค. 2569",days:2, updatedBy:"สมศรี"},
-  {name:"สสอ.สังขละบุรี",      type:"สสอ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"27 เม.ย. 2569",days:34,updatedBy:"สมบูรณ์"},
-  // RPH
-  {name:"รพ.สมเด็จพระสังฆราชองค์ที่ 19",     type:"รพ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"27 เม.ย. 2569",days:34,updatedBy:"พิใจ"},
-  {name:"รพ.เจ้าคุณไพบูลย์พนมทวน",           type:"รพ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"26 มี.ค. 2569",days:2, updatedBy:"พิจารย์"},
-  {name:"รพ.ด่านมะขามเตี้ย",                  type:"รพ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"26 มี.ค. 2569",days:2, updatedBy:"พิรักษ์"},
-  {name:"รพ.ห้วยกระเจา",                      type:"รพ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"26 มี.ค. 2569",days:2, updatedBy:"พิเชษฐ์"},
-  {name:"รพ.เลาขวัญ",                         type:"รพ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"7 เม.ย. 2569", days:14,updatedBy:"พิราบ"},
-  {name:"รพ.บ่อพลอย",                         type:"รพ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"26 มี.ค. 2569",days:2, updatedBy:"พิสัย"},
-  {name:"รพ.หนองปรือ",                        type:"รพ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"7 เม.ย. 2569", days:14,updatedBy:"พิพัฒน์"},
-  {name:"รพ.สถานพระบารมี",                    type:"รพ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"7 เม.ย. 2569", days:14,updatedBy:"พิพิฐ"},
-  {name:"รพ.ท่ากระดาน",                       type:"รพ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"7 เม.ย. 2569", days:14,updatedBy:"พินิจ"},
-  {name:"รพ.ศุกร์ศิริศรีสวัสดิ์",             type:"รพ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"7 เม.ย. 2569", days:14,updatedBy:"พิเคราะห์"},
-  {name:"รพ.ไทรโยค",                          type:"รพ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"7 เม.ย. 2569", days:14,updatedBy:"พิพากษ์"},
-  {name:"รพ.สมเด็จพระปิยมหาราชรมณียเขต",     type:"รพ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"3 เม.ย. 2569", days:10,updatedBy:"พิพาน"},
-  {name:"รพ.ทองผาภูมิ",                       type:"รพ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"3 เม.ย. 2569", days:10,updatedBy:"พิพิม"},
-  {name:"รพ.สังขละบุรี",                      type:"รพ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"3 เม.ย. 2569", days:10,updatedBy:"พิมาย"},
-  // สสจ.
-  {name:"สสจ.",type:"สสจ.",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"7 เม.ย. 2569",days:14,updatedBy:"พิพาน"},
-];
-
 // ─── DATA ────────────────────────────────────────────────────────────
 const DATA = {
-  oct68: { title:"รอบ 1 ต.ค. 2568", steps:[
-    {id:1,name:"คำสั่งเลื่อนขั้นเงินเดือน",status:"done",dateReceive:"7 ม.ค. 2569",dateSend:"15 ม.ค. 2569",days:8,responsible:"ผู้ว่าราชการจังหวัด",updatedBy:"สมใจ",subs:[]},
-    {id:2,name:"เตรียมข้อมูลทำคำสั่งปรับเงินเดือน",status:"done",dateReceive:"15 ม.ค. 2569",dateSend:"10 ก.พ. 2569",days:26,responsible:"งานบุคคลากร",updatedBy:"สมหญิง",subs:[]},
-    {id:3,name:"คำสั่งปรับเงินเดือน",status:"done",dateReceive:"13 ก.พ. 2569",dateSend:"13 ก.พ. 2569",days:0,responsible:"สสจ.",updatedBy:"สมทรง",subs:[]},
-    {id:4,name:"หน่วยบริการ ประเมินเลื่อนขั้นเงินเดือน",status:"done",dateReceive:"14 ก.พ. 2569",dateSend:"20 ก.พ. 2569",days:6,responsible:"งานบุคคลากร",updatedBy:"สมหญิง",subs:[]},
-    {id:5,name:"หน่วยบริการส่งกลับข้อมูลเลื่อนขึ้นเงินเดือน",status:"done",dateReceive:"20 ก.พ. 2569",dateSend:"20 มี.ค. 2569",days:28,responsible:"หน่วยบริการ",subs:s5oct68},
-    {id:6,name:"สรุปข้อมูลวงเงิน & ส่งคืนวงเงินเพิ่มให้หน่วยบริการ",status:"done",dateReceive:"20 มี.ค. 2569",dateSend:"24 มี.ค. 2569",days:4,responsible:"งานบุคคลากร",updatedBy:"สมหญิง",subs:[]},
-    {id:7,name:"หน่วยบริการส่งกลับข้อมูลเลื่อนขึ้นเงินเดือนรอบวงเงินเพิ่ม",status:"done",dateReceive:"24 มี.ค. 2569",dateSend:"27 เม.ย. 2569",days:34,responsible:"หน่วยบริการ",subs:s7oct68},
-    {id:8,name:"คีย์ข้อมูล ตรวจสอบ จัดทำคำสั่ง",status:"done",dateReceive:"27 เม.ย. 2569",dateSend:"30 เม.ย. 2569",days:3,responsible:"งานบุคคลากร",updatedBy:"สมหญิง",subs:[]},
-    {id:9,name:"เสนอผู้ว่าราชการจังหวัดลงนาม",status:"done",dateReceive:"30 เม.ย. 2569",dateSend:"5 พ.ค. 2569",days:5,responsible:"งานบุคคลากร",updatedBy:"สมหญิง",subs:[]},
-    {id:10,name:"ลงข้อมูลและตรวจสอบเงิน จัดทำคำสั่ง",status:"done",dateReceive:"5 พ.ค. 2569",dateSend:"8 พ.ค. 2569",days:3,responsible:"งานบุคคลากร",updatedBy:"สมหญิง",subs:[]},
-    {id:11,name:"คำสั่งได้รับการอนุมัติ",status:"active",dateReceive:"10 พ.ค. 2569",dateSend:null,days:null,responsible:"สสจ.",subs:[]},
-  ]},
   apr69: { title:"รอบ 1 เม.ย. 2569", steps:[
-    {id:1,name:"คำสั่งเลื่อนขั้นเงินเดือน",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"ผู้ว่าราชการจังหวัด",subs:[]},
-    {id:2,name:"เตรียมข้อมูลทำคำสั่งปรับเงินเดือน",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:3,name:"คำสั่งปรับเงินเดือน",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"สสจ.",subs:[]},
-    {id:4,name:"หน่วยบริการ ประเมินเลื่อนขั้นเงินเดือน",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:5,name:"หน่วยบริการส่งกลับข้อมูลเลื่อนขึ้นเงินเดือน",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"หน่วยบริการ",subs:allWait()},
-    {id:6,name:"สรุปข้อมูลวงเงิน & ส่งคืนวงเงินเพิ่มให้หน่วยบริการ",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:7,name:"หน่วยบริการส่งกลับข้อมูลเลื่อนขึ้นเงินเดือนรอบวงเงินเพิ่ม",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"หน่วยบริการ",subs:allWait()},
-    {id:8,name:"คีย์ข้อมูล ตรวจสอบ จัดทำคำสั่ง",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:9,name:"เสนอผู้ว่าราชการจังหวัดลงนาม",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:10,name:"ลงข้อมูลและตรวจสอบเงิน จัดทำคำสั่ง",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:11,name:"คำสั่งได้รับการอนุมัติ",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"สสจ.",subs:[]},
+    {id:1,name:"เตรียมข้อมูลทำคำสั่งปรับเงินเดือน",status:"done",dateReceive:"1 มิ.ย. 2569",dateSend:"2 ส.ค. 2569",days:62,responsible:"งานบุคคลากร",updatedBy:"มารยาท",subs:[]},
+    {id:2,name:"หน่วยบริการ ประเมินเลื่อนขั้นเงินเดือน",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,responsible:"งานบุคคลากร",updatedBy:"มารยาท",subs:[]},
+    {id:3,name:"หน่วยบริการส่งกลับข้อมูลเลื่อนขึ้นเงินเดือน",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"หน่วยบริการ",subs:allWait()},
+    {id:4,name:"สรุปข้อมูลวงเงิน & ส่งคืนวงเงินเพิ่มให้หน่วยบริการ",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
+    {id:5,name:"หน่วยบริการส่งกลับข้อมูลเลื่อนขึ้นเงินเดือนรอบวงเงินเพิ่ม",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"หน่วยบริการ",subs:allWait()},
+    {id:6,name:"คีย์ข้อมูล ตรวจสอบ จัดทำคำสั่ง",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
+    {id:7,name:"เสนอผู้ว่าราชการจังหวัดลงนาม",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
+    {id:8,name:"ลงข้อมูลและตรวจสอบเงิน จัดทำคำสั่ง",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
+    {id:9,name:"คำสั่งได้รับการอนุมัติ",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"สสจ.",subs:[]},
   ]},
   oct69: { title:"รอบ 1 ต.ค. 2569", steps:[
-    {id:1,name:"คำสั่งเลื่อนขั้นเงินเดือน",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"ผู้ว่าราชการจังหวัด",subs:[]},
-    {id:2,name:"เตรียมข้อมูลทำคำสั่งปรับเงินเดือน",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:3,name:"คำสั่งปรับเงินเดือน",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"สสจ.",subs:[]},
-    {id:4,name:"หน่วยบริการ ประเมินเลื่อนขั้นเงินเดือน",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:5,name:"หน่วยบริการส่งกลับข้อมูลเลื่อนขึ้นเงินเดือน",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"หน่วยบริการ",subs:allWait()},
-    {id:6,name:"สรุปข้อมูลวงเงิน & ส่งคืนวงเงินเพิ่มให้หน่วยบริการ",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:7,name:"หน่วยบริการส่งกลับข้อมูลเลื่อนขึ้นเงินเดือนรอบวงเงินเพิ่ม",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"หน่วยบริการ",subs:allWait()},
-    {id:8,name:"คีย์ข้อมูล ตรวจสอบ จัดทำคำสั่ง",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:9,name:"เสนอผู้ว่าราชการจังหวัดลงนาม",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:10,name:"ลงข้อมูลและตรวจสอบเงิน จัดทำคำสั่ง",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:11,name:"คำสั่งได้รับการอนุมัติ",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"สสจ.",subs:[]},
+    {id:1,name:"เตรียมข้อมูลทำคำสั่งปรับเงินเดือน",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
+    {id:2,name:"หน่วยบริการ ประเมินเลื่อนขั้นเงินเดือน",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
+    {id:3,name:"หน่วยบริการส่งกลับข้อมูลเลื่อนขึ้นเงินเดือน",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"หน่วยบริการ",subs:allWait()},
+    {id:4,name:"สรุปข้อมูลวงเงิน & ส่งคืนวงเงินเพิ่มให้หน่วยบริการ",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
+    {id:5,name:"หน่วยบริการส่งกลับข้อมูลเลื่อนขึ้นเงินเดือนรอบวงเงินเพิ่ม",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"หน่วยบริการ",subs:allWait()},
+    {id:6,name:"คีย์ข้อมูล ตรวจสอบ จัดทำคำสั่ง",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
+    {id:7,name:"เสนอผู้ว่าราชการจังหวัดลงนาม",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
+    {id:8,name:"ลงข้อมูลและตรวจสอบเงิน จัดทำคำสั่ง",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
+    {id:9,name:"คำสั่งได้รับการอนุมัติ",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"สสจ.",subs:[]},
   ]}
 };
 
@@ -257,7 +191,7 @@ function getSlowest(subs) {
 }
 
 // ─── FILTER STATE ────────────────────────────────────────────────────
-const SF = { 5:{status:"all",type:"all"}, 7:{status:"all",type:"all"} };
+const SF = { 3:{status:"all",type:"all"}, 5:{status:"all",type:"all"} };
 
 function getStatus(step) {
   if (!step.subs || !step.subs.length) return step.status;
@@ -330,8 +264,8 @@ function toggleSub(sid, btn) {
 }
 
 function renderAll() {
+  SF[3] = {status:"all",type:"all"};
   SF[5] = {status:"all",type:"all"};
-  SF[7] = {status:"all",type:"all"};
 
   const key = document.getElementById('roundSelect').value;
   const steps = DATA[key].steps;
@@ -356,8 +290,8 @@ function renderAll() {
     const icon = st==='done' ? '✓' : step.id;
 
     let meta = '';
-    if(step.dateReceive) meta += `<span class="meta-item">📥 ${step.dateReceive}</span>`;
-    if(step.dateSend)    meta += `<span class="meta-item">📤 ${step.dateSend}</span>`;
+    if(step.dateReceive) meta += `<span class="meta-item">📅 วันที่เริ่ม: ${step.dateReceive}</span>`;
+    if(step.dateSend)    meta += `<span class="meta-item">🏁 วันที่เสร็จ: ${step.dateSend}</span>`;
     if(step.updatedBy)   meta += `<span class="meta-item">👤 ${step.updatedBy}</span>`;
     const resp = step.responsible ? `<span class="resp-tag">🏢 ${step.responsible}</span>` : '';
     const daysH = step.days!=null ? `<span class="days-badge">${step.days} วัน</span>` : '';
@@ -365,7 +299,7 @@ function renderAll() {
 
     // Sub section for step 5 & 7
     let subSec = '';
-    if ((step.id===5||step.id===7) && step.subs && step.subs.length) {
+    if ((step.id===3||step.id===5) && step.subs && step.subs.length) {
       const subs = step.subs;
       const sid = step.id;
       const dc2 = subs.filter(s=>s.status==='done').length;
