@@ -9,9 +9,22 @@
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'Sarabun',sans-serif; background:#f0f4f8; min-height:100vh; padding:24px; color:#2d3748; }
 
+  /* Loading overlay */
+  .loading-overlay { position:fixed; inset:0; background:rgba(240,244,248,0.92); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:999; gap:16px; }
+  .loading-overlay.hidden { display:none; }
+  .spinner { width:44px; height:44px; border:4px solid #e2e8f0; border-top-color:#4fd1c5; border-radius:50%; animation:spin 0.8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .loading-text { font-size:14px; color:#718096; font-weight:500; }
+  .error-box { background:#fff5f5; border:1px solid #feb2b2; border-radius:12px; padding:20px 28px; text-align:center; max-width:360px; }
+  .error-box p { color:#c53030; font-size:13px; margin-bottom:12px; line-height:1.6; }
+  .retry-btn { background:#e53e3e; color:#fff; border:none; border-radius:8px; padding:8px 20px; font-family:'Sarabun',sans-serif; font-size:13px; font-weight:600; cursor:pointer; }
+  .retry-btn:hover { background:#c53030; }
+
   .header { text-align:center; margin-bottom:20px; }
   .header h1 { font-size:22px; font-weight:700; color:#4a5568; }
-  .header p { font-size:13px; color:#a0aec0; margin-top:4px; }
+  .header p { font-size:13px; color:#a0aec0; margin-top:4px; display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; }
+  .refresh-btn { background:#edf2f7; border:1.5px solid #e2e8f0; border-radius:8px; padding:3px 12px; font-family:'Sarabun',sans-serif; font-size:12px; font-weight:600; color:#4a5568; cursor:pointer; transition:background 0.15s; }
+  .refresh-btn:hover { background:#e2e8f0; }
 
   .top-bar { display:flex; justify-content:center; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
   .top-bar select { background:#fff; border:2px solid #e2e8f0; border-radius:12px; padding:10px 20px; font-size:15px; font-family:'Sarabun',sans-serif; font-weight:600; color:#4a5568; cursor:pointer; outline:none; box-shadow:0 2px 8px rgba(0,0,0,0.06); transition:border-color 0.2s; min-width:230px; }
@@ -105,9 +118,20 @@
 </head>
 <body>
 
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <p class="loading-text">กำลังโหลดข้อมูลจาก Google Drive...</p>
+</div>
+
 <div class="header">
   <h1>📋 ติดตามการเลื่อนเงินเดือน</h1>
-  <p>Salary Increment Tracking — สสจ.กาญจนบุรี &nbsp;|&nbsp; อัปเดตล่าสุด: 04/08/2026 11:26</p>
+  <p>
+    Salary Increment Tracking — สสจ.กาญจนบุรี
+    &nbsp;|&nbsp;
+    <span id="updateTime">กำลังโหลด...</span>
+    <button class="refresh-btn" onclick="loadAllData()">🔄 รีเฟรช</button>
+  </p>
 </div>
 
 <div class="top-bar">
@@ -125,56 +149,214 @@
 <div class="timeline-container" id="timeline"></div>
 
 <script>
-// ─── BASE LISTS ──────────────────────────────────────────────────────
-const SSO = ["สสอ.ท่ามะกา","สสอ.เมือง กาญจนบุรี","สสอ.ท่าม่วง","สสอ.พนมทวน","สสอ.ด่านมะขามเตี้ย","สสอ.ห้วยกระเจา","สสอ.เลาขวัญ","สสอ.บ่อพลอย","สสอ.หนองปรือ","สสอ.ศรีสวัสดิ์","สสอ.ไทรโยค","สสอ.ทองผาภูมิ","สสอ.สังขละบุรี"];
-const RPH = ["รพ.สมเด็จพระสังฆราชองค์ที่ 19","รพ.เจ้าคุณไพบูลย์พนมทวน","รพ.ด่านมะขามเตี้ย","รพ.ห้วยกระเจา","รพ.เลาขวัญ","รพ.บ่อพลอย","รพ.หนองปรือ","รพ.สถานพระบารมี","รพ.ท่ากระดาน","รพ.ศุกร์ศิริศรีสวัสดิ์","รพ.ไทรโยค","รพ.สมเด็จพระปิยมหาราชรมณียเขต","รพ.ทองผาภูมิ","รพ.สังขละบุรี"];
-
-function mkWait(names, type) {
-  return names.map(n => ({ name:n, type, status:"wait", dateReceive:null, dateSend:null, days:null, updatedBy:null }));
-}
-function allWait() {
-  return [...mkWait(SSO,"สสอ."), ...mkWait(RPH,"รพ."), {name:"สสจ.",type:"สสจ.",status:"wait",dateReceive:null,dateSend:null,days:null,updatedBy:null}];
-}
-
-// ─── DATA ────────────────────────────────────────────────────────────
-const DATA = {
-  apr69: { title:"รอบ 1 เม.ย. 2569", steps:[
-    {id:1,name:"เตรียมข้อมูลทำคำสั่งปรับเงินเดือน",status:"done",dateReceive:"1 มิ.ย. 2569",dateSend:"2 ส.ค. 2569",days:62,responsible:"งานบุคคลากร",updatedBy:"มารยาท",subs:[]},
-    {id:2,name:"เตรียมส่งข้อมูลให้หน่วยบริการ เพื่อประเมินเลื่อนขั้นเงินเดือน",status:"done",dateReceive:"2 ส.ค. 2569",dateSend:"2 ส.ค. 2569",days:0,responsible:"งานบุคคลากร",updatedBy:"มารยาท",subs:[]},
-    {id:3,name:"เตรียมส่งข้อมูลให้หน่วยบริการ เพื่อประเมินเลื่อนขั้นเงินเดือน",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,responsible:"หน่วยบริการ",subs:[{name:"สสอ.ท่ามะกา",type:"สสอ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"สสอ.เมือง กาญจนบุรี",type:"สสอ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"สสอ.ท่าม่วง",type:"สสอ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"สสอ.พนมทวน",type:"สสอ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"สสอ.ด่านมะขามเตี้ย",type:"สสอ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"สสอ.ห้วยกระเจา",type:"สสอ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"สสอ.เลาขวัญ",type:"สสอ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"สสอ.บ่อพลอย",type:"สสอ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"สสอ.หนองปรือ",type:"สสอ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"สสอ.ศรีสวัสดิ์",type:"สสอ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"สสอ.ไทรโยค",type:"สสอ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"สสอ.ทองผาภูมิ",type:"สสอ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"สสอ.สังขละบุรี",type:"สสอ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"รพ.สมเด็จพระสังฆราชองค์ที่ 19",type:"รพ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"รพ.เจ้าคุณไพบูลย์พนมทวน",type:"รพ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"รพ.ด่านมะขามเตี้ย",type:"รพ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"รพ.ห้วยกระเจา",type:"รพ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"รพ.เลาขวัญ",type:"รพ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"รพ.บ่อพลอย",type:"รพ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"รพ.หนองปรือ",type:"รพ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"รพ.สถานพระบารมี",type:"รพ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"รพ.ท่ากระดาน",type:"รพ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"รพ.ศุกร์ศิริศรีสวัสดิ์",type:"รพ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"รพ.ไทรโยค",type:"รพ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"รพ.สมเด็จพระปิยมหาราชรมณียเขต",type:"รพ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"รพ.ทองผาภูมิ",type:"รพ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"รพ.สังขละบุรี",type:"รพ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null},{name:"สสจ.",type:"สสจ.",status:"active",dateReceive:"3 ส.ค. 2569",dateSend:null,days:null,updatedBy:null}]},
-    {id:4,name:"สรุปข้อมูลวงเงิน & ส่งคืนวงเงินเพิ่มให้หน่วยบริการ",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:5,name:"หน่วยบริการส่งกลับข้อมูลเลื่อนขึ้นเงินเดือนรอบวงเงินเพิ่ม",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"หน่วยบริการ",subs:allWait()},
-    {id:6,name:"คีย์ข้อมูล ตรวจสอบ จัดทำคำสั่ง",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:7,name:"เสนอผู้ว่าราชการจังหวัดลงนาม",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:8,name:"ลงข้อมูลและตรวจสอบเงิน จัดทำคำสั่ง",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:9,name:"คำสั่งได้รับการอนุมัติ",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"สสจ.",subs:[]},
-  ]},
-  oct69: { title:"รอบ 1 ต.ค. 2569", steps:[
-    {id:1,name:"เตรียมข้อมูลทำคำสั่งปรับเงินเดือน",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:2,name:"เตรียมส่งข้อมูลให้หน่วยบริการ เพื่อประเมินเลื่อนขั้นเงินเดือน",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:3,name:"เตรียมส่งข้อมูลให้หน่วยบริการ เพื่อประเมินเลื่อนขั้นเงินเดือน",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"หน่วยบริการ",subs:allWait()},
-    {id:4,name:"สรุปข้อมูลวงเงิน & ส่งคืนวงเงินเพิ่มให้หน่วยบริการ",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:5,name:"หน่วยบริการส่งกลับข้อมูลเลื่อนขึ้นเงินเดือนรอบวงเงินเพิ่ม",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"หน่วยบริการ",subs:allWait()},
-    {id:6,name:"คีย์ข้อมูล ตรวจสอบ จัดทำคำสั่ง",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:7,name:"เสนอผู้ว่าราชการจังหวัดลงนาม",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:8,name:"ลงข้อมูลและตรวจสอบเงิน จัดทำคำสั่ง",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"งานบุคคลากร",subs:[]},
-    {id:9,name:"คำสั่งได้รับการอนุมัติ",status:"wait",dateReceive:null,dateSend:null,days:null,responsible:"สสจ.",subs:[]},
-  ]}
+// ─── CONFIG ──────────────────────────────────────────────────────────
+const SHEET_ID = '1lJHWkPH6zu-kG9BpLUIoEIZwm0otJ3zFw533rVvS8YQ';
+const SHEET_NAMES = {
+  apr69: 'tracking_apr69',
+  oct69: 'tracking_oct69'
+};
+const ROUND_TITLES = {
+  apr69: 'รอบ 1 เม.ย. 2569',
+  oct69: 'รอบ 1 ต.ค. 2569'
 };
 
+// ─── STATE ───────────────────────────────────────────────────────────
+const DATA = {};
+const SF = {};   // filter state per step id
 
-// ─── SLOWEST UNIT HELPER ─────────────────────────────────────────────────────
-const THAI_MONTHS = {"ม.ค.":1,"ก.พ.":2,"มี.ค.":3,"เม.ย.":4,"พ.ค.":5,"มิ.ย.":6,
-  "ก.ค.":7,"ส.ค.":8,"ก.ย.":9,"ต.ค.":10,"พ.ย.":11,"ธ.ค.":12};
+// ─── DATE UTILITIES ──────────────────────────────────────────────────
+const THAI_MONTHS = {
+  "ม.ค.":1,"ก.พ.":2,"มี.ค.":3,"เม.ย.":4,"พ.ค.":5,"มิ.ย.":6,
+  "ก.ค.":7,"ส.ค.":8,"ก.ย.":9,"ต.ค.":10,"พ.ย.":11,"ธ.ค.":12
+};
+
+// Normalize short Thai date string "3 ส.ค. 69" → "3 ส.ค. 2569"
+// Handles "3 ส.ค. 69", "3 ส.ค.69", "3 ส.ค. 2569"
+function normDate(s) {
+  if (!s || !s.trim()) return null;
+  s = s.trim();
+  const m = s.match(/^(\d+)\s*([฀-๿.]+?)\s*(\d{2,4})$/);
+  if (!m) return null;
+  let year = parseInt(m[3]);
+  if (year < 100) year += 2500;
+  const monthStr = m[2].trim().replace(/\.+$/, '') + '.'; // ensure single trailing dot
+  // Try THAI_MONTHS lookup with what we have
+  return `${parseInt(m[1])} ${m[2].trim()} ${year}`;
+}
+
+// Parse normalized date string to JS Date (CE)
 function parseThaiDate(s) {
   if (!s) return null;
-  const m = s.trim().match(/^(\d+)\s+(\S+)\s+(\d+)$/);
+  const m = s.trim().match(/^(\d+)\s+([฀-๿.]+?)\s+(\d{2,4})$/);
   if (!m) return null;
-  const mo = THAI_MONTHS[m[2]]; if (!mo) return null;
-  return new Date(parseInt(m[3]) - 543, mo - 1, parseInt(m[1]));
+  const mo = THAI_MONTHS[m[2].trim()];
+  if (!mo) return null;
+  let year = parseInt(m[3]);
+  if (year < 100) year += 2500;
+  year -= 543; // BE → CE
+  return new Date(year, mo - 1, parseInt(m[1]));
 }
+
+function daysBetween(d1str, d2str) {
+  const d1 = parseThaiDate(d1str);
+  const d2 = parseThaiDate(d2str);
+  if (!d1 || !d2) return null;
+  return Math.round((d2 - d1) / 86400000);
+}
+
+function daysFromToday(dateStr) {
+  const d = parseThaiDate(dateStr);
+  if (!d) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.round((today - d) / 86400000);
+}
+
+// ─── CSV PARSER ──────────────────────────────────────────────────────
+function parseCSV(text) {
+  const lines = [];
+  let cur = [], field = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQ) {
+      if (ch === '"' && text[i+1] === '"') { field += '"'; i++; }
+      else if (ch === '"') { inQ = false; }
+      else { field += ch; }
+    } else {
+      if (ch === '"') { inQ = true; }
+      else if (ch === ',') { cur.push(field); field = ''; }
+      else if (ch === '\n') { cur.push(field); lines.push(cur); cur = []; field = ''; }
+      else if (ch !== '\r') { field += ch; }
+    }
+  }
+  if (field || cur.length) { cur.push(field); lines.push(cur); }
+  return lines;
+}
+
+// ─── CSV → DATA STRUCTURE ────────────────────────────────────────────
+function csvToData(rows, roundKey) {
+  const title = ROUND_TITLES[roundKey];
+  const steps = [];
+  let currentStep = null;
+
+  // Skip 3 header rows
+  for (let i = 3; i < rows.length; i++) {
+    const row = rows[i];
+    const col0 = (row[0] || '').trim();
+    const col1 = (row[1] || '').trim();
+
+    // Skip empty rows and legend rows
+    if (!col0 && !col1) continue;
+    if (col1.startsWith('LEGEND') || col0.startsWith('LEGEND')) continue;
+
+    const dateReceive = normDate(row[2]);
+    const dateSend    = normDate(row[3]);
+    const status      = (row[4] || '').trim().toLowerCase() || 'wait';
+    const responsible = (row[6] || '').trim();
+    const updatedBy   = (row[7] || '').trim() || null;
+
+    const stepNum = parseInt(col0);
+    if (col0 && !isNaN(stepNum)) {
+      // ── Step row ──
+      let days = null;
+      if (status === 'done' && dateReceive && dateSend) {
+        days = daysBetween(dateReceive, dateSend);
+      } else if (status === 'active' && dateReceive) {
+        days = daysFromToday(dateReceive);
+      }
+      currentStep = {
+        id: stepNum,
+        name: col1,
+        status,
+        dateReceive: dateReceive || null,
+        dateSend: dateSend || null,
+        days,
+        responsible: responsible || null,
+        updatedBy,
+        subs: []
+      };
+      steps.push(currentStep);
+
+    } else if (!col0 && col1 && currentStep) {
+      // ── Sub row ──
+      // col[6] is the type tag: สสอ. / รพ. / สสจ.
+      let type = 'สสจ.';
+      if (responsible.includes('สสอ')) type = 'สสอ.';
+      else if (responsible.includes('รพ')) type = 'รพ.';
+
+      let days = null;
+      if (status === 'done' && dateReceive && dateSend) {
+        days = daysBetween(dateReceive, dateSend);
+      } else if (status === 'active' && dateReceive) {
+        days = daysFromToday(dateReceive);
+      }
+
+      currentStep.subs.push({
+        name: col1,
+        type,
+        status,
+        dateReceive: dateReceive || null,
+        dateSend: dateSend || null,
+        days,
+        updatedBy
+      });
+    }
+  }
+
+  // Derive step status from subs (if step has subs, override status from CSV)
+  for (const step of steps) {
+    if (!step.subs.length) continue;
+    if (step.subs.every(s => s.status === 'done')) step.status = 'done';
+    else if (step.subs.some(s => s.status === 'done' || s.status === 'active')) step.status = 'active';
+    else step.status = 'wait';
+    // Recalculate days for sub-based steps
+    if (step.status === 'active' && step.dateReceive) {
+      step.days = daysFromToday(step.dateReceive);
+    }
+  }
+
+  return { title, steps };
+}
+
+// ─── FETCH ───────────────────────────────────────────────────────────
+async function fetchSheet(roundKey) {
+  const sheetName = SHEET_NAMES[roundKey];
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`HTTP ${resp.status} (${sheetName})`);
+  const text = await resp.text();
+  const rows = parseCSV(text);
+  return csvToData(rows, roundKey);
+}
+
+async function loadAllData() {
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.innerHTML = '<div class="spinner"></div><p class="loading-text">กำลังโหลดข้อมูลจาก Google Drive...</p>';
+  overlay.classList.remove('hidden');
+
+  try {
+    const [apr, oct] = await Promise.all([fetchSheet('apr69'), fetchSheet('oct69')]);
+    DATA.apr69 = apr;
+    DATA.oct69 = oct;
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+    const dateStr = now.toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'numeric'});
+    document.getElementById('updateTime').textContent = `อัปเดต: ${dateStr} ${timeStr}`;
+
+    renderAll();
+    overlay.classList.add('hidden');
+  } catch(e) {
+    overlay.innerHTML = `
+      <div class="error-box">
+        <p>❌ โหลดข้อมูลไม่สำเร็จ<br><small>${e.message}</small><br><br>
+        ตรวจสอบว่า Google Sheet ตั้งค่า "Anyone with the link" → View แล้วหรือยัง</p>
+        <button class="retry-btn" onclick="loadAllData()">🔄 ลองใหม่</button>
+      </div>`;
+  }
+}
+
+// ─── SLOWEST UNIT HELPER ─────────────────────────────────────────────
 function getSlowest(subs) {
-  // Only consider done subs with a dateSend
   const done = subs.filter(s => s.status === 'done' && s.dateSend);
   if (!done.length) return null;
   let maxDate = null;
@@ -190,13 +372,24 @@ function getSlowest(subs) {
   return { names: tied.map(s => s.name), count: tied.length };
 }
 
-// ─── FILTER STATE ────────────────────────────────────────────────────
-const SF = { 3:{status:"all",type:"all"}, 5:{status:"all",type:"all"} };
+// ─── FILTER HELPERS ───────────────────────────────────────────────────
+function getOrInitSF(sid) {
+  if (!SF[sid]) SF[sid] = { status:'all', type:'all' };
+  return SF[sid];
+}
+function applyFilter(subs, sid) {
+  const f = getOrInitSF(sid);
+  return subs.filter(s =>
+    (f.status === 'all' || s.status === f.status) &&
+    (f.type   === 'all' || s.type   === f.type)
+  );
+}
 
+// ─── RENDER HELPERS ───────────────────────────────────────────────────
 function getStatus(step) {
   if (!step.subs || !step.subs.length) return step.status;
-  if (step.subs.every(s=>s.status==='done')) return 'done';
-  if (step.subs.some(s=>s.status==='done'||s.status==='active')) return 'active';
+  if (step.subs.every(s => s.status === 'done')) return 'done';
+  if (step.subs.some(s => s.status === 'done' || s.status === 'active')) return 'active';
   return 'wait';
 }
 function badge(s){ return s==='done'?'เสร็จแล้ว':s==='active'?'กำลังดำเนินการ':'รอดำเนินการ'; }
@@ -206,27 +399,20 @@ function typeTag(t) {
   return `<span class="type-tag tt-ssk">สสจ.</span>`;
 }
 
-function applyFilter(subs, sid) {
-  const f = SF[sid];
-  return subs.filter(s =>
-    (f.status==='all' || s.status===f.status) &&
-    (f.type==='all'   || s.type===f.type)
-  );
-}
-
 function buildSubHtml(subs, sid) {
   const groups = ['สสอ.','รพ.','สสจ.'];
   const filtered = applyFilter(subs, sid);
   if (!filtered.length) return `<div class="no-result">ไม่พบข้อมูลที่กรอง</div>`;
   let h = '';
   groups.forEach(g => {
-    const items = filtered.filter(s=>s.type===g);
+    const items = filtered.filter(s => s.type === g);
     if (!items.length) return;
     h += `<div class="group-label">${g}</div>`;
     items.forEach(s => {
-      const dimmed = s.status==='wait' ? ' dimmed' : '';
+      const dimmed = s.status === 'wait' ? ' dimmed' : '';
       const dates = s.dateReceive ? `${s.dateReceive}${s.dateSend?' → '+s.dateSend:''}` : '—';
-      const daysH = s.days!=null ? `<span class="${s.status==='done'?'sub-days-ok':'sub-days-act'}">${s.days} วัน</span>` : '';
+      const daysH = s.days != null
+        ? `<span class="${s.status==='done'?'sub-days-ok':'sub-days-act'}">${s.days} วัน</span>` : '';
       const updH  = s.updatedBy ? `<span class="sub-upd">👤 ${s.updatedBy}</span>` : '';
       h += `<div class="sub-row">
         <div class="sub-dot ${s.status}"></div>
@@ -242,7 +428,7 @@ function buildSubHtml(subs, sid) {
 
 function updateSubSection(sid) {
   const key = document.getElementById('roundSelect').value;
-  const step = DATA[key].steps.find(s=>s.id===sid);
+  const step = DATA[key] && DATA[key].steps.find(s => s.id === sid);
   const wrap = document.getElementById(`sub-wrap-${sid}`);
   if (!wrap || !step) return;
   const shown = applyFilter(step.subs, sid).length;
@@ -251,7 +437,7 @@ function updateSubSection(sid) {
 }
 
 function onSF(sid, field, val) {
-  SF[sid][field] = val;
+  getOrInitSF(sid)[field] = val;
   updateSubSection(sid);
 }
 
@@ -263,54 +449,61 @@ function toggleSub(sid, btn) {
   if (arrow) arrow.classList.toggle('open', isOpen);
 }
 
+// ─── MAIN RENDER ─────────────────────────────────────────────────────
 function renderAll() {
-  SF[3] = {status:"all",type:"all"};
-  SF[5] = {status:"all",type:"all"};
+  // Reset filter state
+  Object.keys(SF).forEach(k => delete SF[k]);
 
   const key = document.getElementById('roundSelect').value;
+  if (!DATA[key]) return;
   const steps = DATA[key].steps;
 
-  let dc=0,ac=0,wc=0,td=0;
+  let dc=0, ac=0, wc=0, td=0;
   let activeStep = null;
-  steps.forEach(s=>{ const st=getStatus(s); if(st==='done')dc++; else if(st==='active'){ ac++; if(!activeStep) activeStep=s; } else wc++; if(s.days)td+=s.days; });
-  const pct = Math.round(dc/steps.length*100);
+  steps.forEach(s => {
+    const st = getStatus(s);
+    if (st === 'done') { dc++; if (s.days) td += s.days; }
+    else if (st === 'active') { ac++; if (!activeStep) activeStep = s; }
+    else wc++;
+  });
+  const pct = steps.length ? Math.round(dc / steps.length * 100) : 0;
 
   document.getElementById('summaryCards').innerHTML = `
     <div class="card done"><div class="num">${dc}</div><div class="label">✅ เสร็จแล้ว</div></div>
-    <div class="card active"><div class="label">⚡ ขั้นตอนปัจจุบัน</div><div class="step-name">${activeStep ? activeStep.name : "-"}</div></div>
+    <div class="card active"><div class="label">⚡ ขั้นตอนปัจจุบัน</div><div class="step-name">${activeStep ? activeStep.name : '—'}</div></div>
     <div class="card wait"><div class="num">${wc}</div><div class="label">⬜ รอดำเนินการ</div></div>
     <div class="card days"><div class="num">${td}</div><div class="label">📅 วันรวม</div></div>`;
-  document.getElementById('pPct').textContent = pct+'%';
-  document.getElementById('pFill').style.width = pct+'%';
+  document.getElementById('pPct').textContent = pct + '%';
+  document.getElementById('pFill').style.width = pct + '%';
 
   let html = '';
   steps.forEach((step, idx) => {
     const st = getStatus(step);
-    const isLast = idx === steps.length-1;
-    const icon = st==='done' ? '✓' : step.id;
+    const isLast = idx === steps.length - 1;
+    const icon = st === 'done' ? '✓' : step.id;
 
     let meta = '';
-    if(step.dateReceive) meta += `<span class="meta-item">📅 วันที่เริ่ม: ${step.dateReceive}</span>`;
-    if(step.dateSend)    meta += `<span class="meta-item">🏁 วันที่เสร็จ: ${step.dateSend}</span>`;
-    if(step.updatedBy)   meta += `<span class="meta-item">👤 ${step.updatedBy}</span>`;
-    const resp = step.responsible ? `<span class="resp-tag">🏢 ${step.responsible}</span>` : '';
-    const daysH = step.days!=null ? `<span class="days-badge">${step.days} วัน</span>` : '';
-    const liveLabel = st==='active' ? '<div class="active-label">🔴 LIVE</div>' : '';
+    if (step.dateReceive) meta += `<span class="meta-item">📅 วันที่เริ่ม: ${step.dateReceive}</span>`;
+    if (step.dateSend)    meta += `<span class="meta-item">🏁 วันที่เสร็จ: ${step.dateSend}</span>`;
+    if (step.updatedBy)   meta += `<span class="meta-item">👤 ${step.updatedBy}</span>`;
+    const resp  = step.responsible ? `<span class="resp-tag">🏢 ${step.responsible}</span>` : '';
+    const daysH = step.days != null ? `<span class="days-badge">${step.days} วัน</span>` : '';
+    const liveLabel = st === 'active' ? '<div class="active-label">🔴 LIVE</div>' : '';
 
-    // Sub section for step 5 & 7
+    // Sub section for any step that has subs
     let subSec = '';
-    if ((step.id===3||step.id===5) && step.subs && step.subs.length) {
+    if (step.subs && step.subs.length) {
       const subs = step.subs;
       const sid = step.id;
-      const dc2 = subs.filter(s=>s.status==='done').length;
-      const ac2 = subs.filter(s=>s.status==='active').length;
-      const wc2 = subs.filter(s=>s.status==='wait').length;
-      const ssoC = subs.filter(s=>s.type==='สสอ.').length;
-      const rphC = subs.filter(s=>s.type==='รพ.').length;
-      const sskC = subs.filter(s=>s.type==='สสจ.').length;
+      getOrInitSF(sid);
+      const dc2 = subs.filter(s => s.status === 'done').length;
+      const ac2 = subs.filter(s => s.status === 'active').length;
+      const wc2 = subs.filter(s => s.status === 'wait').length;
+      const ssoC = subs.filter(s => s.type === 'สสอ.').length;
+      const rphC = subs.filter(s => s.type === 'รพ.').length;
+      const sskC = subs.filter(s => s.type === 'สสจ.').length;
       const shown = applyFilter(subs, sid).length;
 
-      // Slowest unit banner
       const slowInfo = getSlowest(subs);
       const slowBanner = slowInfo
         ? `<div class="slowest-banner">🐢 ช้าที่สุด (${slowInfo.count} หน่วย${slowInfo.count>1?', วันเดียวกัน':''}): ${slowInfo.names.join(', ')}</div>`
@@ -338,9 +531,9 @@ function renderAll() {
             <label>ประเภท:</label>
             <select class="sub-filter-select" onchange="onSF(${sid},'type',this.value)">
               <option value="all">ทุกประเภท (${subs.length})</option>
-              <option value="สสอ.">สสอ. (${ssoC})</option>
-              <option value="รพ.">รพ. (${rphC})</option>
-              <option value="สสจ.">สสจ. (${sskC})</option>
+              ${ssoC ? `<option value="สสอ.">สสอ. (${ssoC})</option>` : ''}
+              ${rphC ? `<option value="รพ.">รพ. (${rphC})</option>` : ''}
+              ${sskC ? `<option value="สสจ.">สสจ. (${sskC})</option>` : ''}
             </select>
             <span class="sub-count-tag">แสดง ${shown}/${subs.length}</span>
           </div>
@@ -352,7 +545,7 @@ function renderAll() {
       <div class="step-item">
         <div class="step-left">
           <div class="step-icon ${st}">${icon}</div>
-          ${!isLast?`<div class="step-line${st==='done'?' done-line':''}"></div>`:''}
+          ${!isLast ? `<div class="step-line${st==='done'?' done-line':''}"></div>` : ''}
         </div>
         <div class="step-content ${st}">
           ${liveLabel}
@@ -360,7 +553,7 @@ function renderAll() {
             <span class="step-title">ขั้นตอน ${step.id} — ${step.name}</span>
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">${daysH}<span class="step-badge badge-${st}">${badge(st)}</span></div>
           </div>
-          ${(meta||resp)?`<div class="step-meta">${meta}${resp}</div>`:''}
+          ${(meta||resp) ? `<div class="step-meta">${meta}${resp}</div>` : ''}
           ${subSec}
         </div>
       </div>`;
@@ -369,7 +562,8 @@ function renderAll() {
   document.getElementById('timeline').innerHTML = html;
 }
 
-renderAll();
+// ─── INIT ────────────────────────────────────────────────────────────
+loadAllData();
 </script>
 </body>
 </html>
