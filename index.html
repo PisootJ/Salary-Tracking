@@ -179,8 +179,6 @@ function normDate(s) {
   if (!m) return null;
   let year = parseInt(m[3]);
   if (year < 100) year += 2500;
-  const monthStr = m[2].trim().replace(/\.+$/, '') + '.'; // ensure single trailing dot
-  // Try THAI_MONTHS lookup with what we have
   return `${parseInt(m[1])} ${m[2].trim()} ${year}`;
 }
 
@@ -238,8 +236,17 @@ function csvToData(rows, roundKey) {
   const steps = [];
   let currentStep = null;
 
-  // Skip 3 header rows
-  for (let i = 3; i < rows.length; i++) {
+  // Dynamically find data start: look for the "ลำดับ" column header row,
+  // then begin parsing from the next row (handles any number of title/instruction rows)
+  let dataStart = 0;
+  for (let i = 0; i < Math.min(rows.length, 10); i++) {
+    if ((rows[i][0] || '').trim() === 'ลำดับ') {
+      dataStart = i + 1;
+      break;
+    }
+  }
+
+  for (let i = dataStart; i < rows.length; i++) {
     const row = rows[i];
     const col0 = (row[0] || '').trim();
     const col1 = (row[1] || '').trim();
