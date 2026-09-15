@@ -171,28 +171,32 @@ const THAI_MONTHS = {
   "มกราคม":1,"กุมภาพันธ์":2,"มีนาคม":3,"เมษายน":4,"พฤษภาคม":5,"มิถุนายน":6,
   "กรกฎาคม":7,"สิงหาคม":8,"กันยายน":9,"ตุลาคม":10,"พฤศจิกายน":11,"ธันวาคม":12
 };
+// Sort longest-first so full names match before abbreviations (avoids false substring hits)
+const THAI_MONTHS_ENTRIES = Object.entries(THAI_MONTHS).sort((a,b) => b[0].length - a[0].length);
+
+// Find month by stripping dots from both the input and each key before comparing.
+// This handles: "ส.ค." / "ส.ค" / "สค." / "สค" / "สิงหาคม" — any variant.
+function findMonth(s) {
+  const sNoDots = s.replace(/\./g, '');
+  for (const [k, v] of THAI_MONTHS_ENTRIES) {
+    if (sNoDots.includes(k.replace(/\./g, ''))) return { key: k, val: v };
+  }
+  return null;
+}
 
 // Normalize Thai date string to canonical "D Mon YYYY" (BE)
-// Robust: searches for month key as substring — not sensitive to surrounding whitespace/chars
 function normDate(s) {
   if (!s || !s.trim()) return null;
   s = s.trim();
-  // Day: leading digits
   const dayM = s.match(/^(\d{1,2})/);
   if (!dayM) return null;
-  const day = parseInt(dayM[1]);
-  // Year: trailing digits (2 or 4)
   const yearM = s.match(/(\d{2,4})\s*$/);
   if (!yearM) return null;
   let year = parseInt(yearM[1]);
   if (year < 100) year += 2500;
-  // Month: find any THAI_MONTHS key that appears in the string
-  let monthKey = null;
-  for (const k of Object.keys(THAI_MONTHS)) {
-    if (s.includes(k)) { monthKey = k; break; }
-  }
-  if (!monthKey) return null;
-  return `${day} ${monthKey} ${year}`;
+  const m = findMonth(s);
+  if (!m) return null;
+  return `${parseInt(dayM[1])} ${m.key} ${year}`;
 }
 
 // Parse canonical Thai date string to JS Date (CE). Returns null on any failure.
@@ -205,13 +209,10 @@ function parseThaiDate(s) {
   if (!yearM) return null;
   let year = parseInt(yearM[1]);
   if (year < 100) year += 2500;
-  let mo = null;
-  for (const [k, v] of Object.entries(THAI_MONTHS)) {
-    if (s.includes(k)) { mo = v; break; }
-  }
-  if (!mo) return null;
+  const m = findMonth(s);
+  if (!m) return null;
   year -= 543; // BE → CE
-  const d = new Date(year, mo - 1, parseInt(dayM[1]));
+  const d = new Date(year, m.val - 1, parseInt(dayM[1]));
   return isNaN(d.getTime()) ? null : d;
 }
 
