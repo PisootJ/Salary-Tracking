@@ -170,30 +170,46 @@ const THAI_MONTHS = {
   "ก.ค.":7,"ส.ค.":8,"ก.ย.":9,"ต.ค.":10,"พ.ย.":11,"ธ.ค.":12
 };
 
-// Normalize short Thai date string "3 ส.ค. 69" → "3 ส.ค. 2569"
-// Handles "3 ส.ค. 69", "3 ส.ค.69", "3 ส.ค. 2569", "3 สิงหาคม 2569"
+// Normalize Thai date string to canonical "D Mon YYYY" (BE)
+// Robust: searches for month key as substring — not sensitive to surrounding whitespace/chars
 function normDate(s) {
   if (!s || !s.trim()) return null;
   s = s.trim();
-  // Use ฀-๿ (safer than literal Thai chars in source)
-  const m = s.match(/^(\d{1,2})\s*([฀-๿.]+?)\s*(\d{2,4})$/);
-  if (!m) return null;
-  let year = parseInt(m[3]);
+  // Day: leading digits
+  const dayM = s.match(/^(\d{1,2})/);
+  if (!dayM) return null;
+  const day = parseInt(dayM[1]);
+  // Year: trailing digits (2 or 4)
+  const yearM = s.match(/(\d{2,4})\s*$/);
+  if (!yearM) return null;
+  let year = parseInt(yearM[1]);
   if (year < 100) year += 2500;
-  return `${parseInt(m[1])} ${m[2].trim()} ${year}`;
+  // Month: find any THAI_MONTHS key that appears in the string
+  let monthKey = null;
+  for (const k of Object.keys(THAI_MONTHS)) {
+    if (s.includes(k)) { monthKey = k; break; }
+  }
+  if (!monthKey) return null;
+  return `${day} ${monthKey} ${year}`;
 }
 
-// Parse Thai date string to JS Date (CE). Returns null on any failure.
+// Parse canonical Thai date string to JS Date (CE). Returns null on any failure.
 function parseThaiDate(s) {
   if (!s) return null;
-  const m = s.trim().match(/^(\d{1,2})\s+([฀-๿.]+?)\s+(\d{2,4})$/);
-  if (!m) return null;
-  const mo = THAI_MONTHS[m[2].trim()];
-  if (!mo) return null;
-  let year = parseInt(m[3]);
+  s = s.trim();
+  const dayM = s.match(/^(\d{1,2})/);
+  if (!dayM) return null;
+  const yearM = s.match(/(\d{2,4})\s*$/);
+  if (!yearM) return null;
+  let year = parseInt(yearM[1]);
   if (year < 100) year += 2500;
+  let mo = null;
+  for (const [k, v] of Object.entries(THAI_MONTHS)) {
+    if (s.includes(k)) { mo = v; break; }
+  }
+  if (!mo) return null;
   year -= 543; // BE → CE
-  const d = new Date(year, mo - 1, parseInt(m[1]));
+  const d = new Date(year, mo - 1, parseInt(dayM[1]));
   return isNaN(d.getTime()) ? null : d;
 }
 
