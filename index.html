@@ -378,6 +378,8 @@ function getSlowest(subs) {
     const d = parseThaiDate(s.dateSend);
     return d && d.getTime() === maxDate.getTime();
   });
+  // ถ้าหน่วยที่ช้าที่สุดมีจำนวน > 80% ของทั้งหมด ถือว่าไม่มีใครล่าช้า
+  if (tied.length / done.length > 0.8) return null;
   return { names: tied.map(s => s.name), count: tied.length };
 }
 
