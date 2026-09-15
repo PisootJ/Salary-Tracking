@@ -105,7 +105,7 @@
   .sub-dot.done { background:#4a5568; } .sub-dot.active { background:#f6ad55; animation:pulse-dot 1.5s infinite; } .sub-dot.wait { background:#e2e8f0; border:1.5px dashed #cbd5e0; }
   .type-tag { font-size:10px; font-weight:700; border-radius:5px; padding:1px 7px; white-space:nowrap; flex-shrink:0; }
   .tt-sso { background:#ebf8ff; color:#2b6cb0; } .tt-rph { background:#f0fff4; color:#276749; } .tt-ssk { background:#faf5ff; color:#6b46c1; }
-  .sub-name { flex:1; color:#4a5568; } .sub-name.dimmed { color:#cbd5e0; }
+  .sub-name { flex:1; color:#4a5568; } .sub-name.dimmed { color:#cbd5e0; } .sub-name.over14 { color:#ed8936; font-weight:600; }
   .sub-dates { font-size:11px; color:#a0aec0; }
   .sub-days-ok { font-size:11px; font-weight:700; color:#68d391; }
   .sub-days-act { font-size:11px; font-weight:700; color:#f6ad55; }
@@ -447,13 +447,14 @@ function buildSubHtml(subs, sid) {
       } else if (rd == null && s.status === 'active' && s.dateReceive) {
         rd = daysFromToday(s.dateReceive);
       }
+      const over14 = rd != null && rd > 14;
       const daysH = rd != null
         ? `<span class="${s.status==='done'?'sub-days-ok':'sub-days-act'}">${rd} วัน</span>` : '';
       const updH  = s.updatedBy ? `<span class="sub-upd">👤 ${s.updatedBy}</span>` : '';
       h += `<div class="sub-row">
         <div class="sub-dot ${s.status}"></div>
         ${typeTag(s.type)}
-        <span class="sub-name${dimmed}">${s.name}</span>
+        <span class="sub-name${dimmed}${over14?' over14':''}">${s.name}</span>
         <span class="sub-dates">${dates}</span>
         ${daysH}${updH}
       </div>`;
@@ -540,7 +541,7 @@ function renderAll() {
       const sskC = subs.filter(s => s.type === 'สสจ.').length;
       const shown = applyFilter(subs, sid).length;
 
-      const slowInfo = getSlowest(subs);
+      const slowInfo = (sid === 3 || sid === 5) ? null : getSlowest(subs);
       const slowBanner = slowInfo
         ? `<div class="slowest-banner">🐢 ช้าที่สุด (${slowInfo.count} หน่วย${slowInfo.count>1?', วันเดียวกัน':''}): ${slowInfo.names.join(', ')}</div>`
         : '';
