@@ -340,8 +340,20 @@ function csvToData(rows, roundKey) {
     if (step.subs.every(s => s.status === 'done')) step.status = 'done';
     else if (step.subs.some(s => s.status === 'done' || s.status === 'active')) step.status = 'active';
     else step.status = 'wait';
-    // Recalculate days for sub-based steps
-    if (step.status === 'active' && step.dateReceive) {
+    // คำนวณจำนวนวันจากหน่วยงานที่ส่งช้าที่สุด
+    // (นับจาก dateReceive ของ step ถึง dateSend ของ sub ที่ช้าสุด)
+    const doneSubs = step.subs.filter(s => s.status === 'done' && s.dateSend);
+    const startDate = step.dateReceive ? parseThaiDate(step.dateReceive) : null;
+    if (doneSubs.length && startDate) {
+      let maxSendDate = null;
+      doneSubs.forEach(s => {
+        const d = parseThaiDate(s.dateSend);
+        if (d && (!maxSendDate || d > maxSendDate)) maxSendDate = d;
+      });
+      if (maxSendDate) {
+        step.days = Math.round((maxSendDate - startDate) / 86400000);
+      }
+    } else if (step.status === 'active' && step.dateReceive) {
       step.days = daysFromToday(step.dateReceive);
     }
   }
