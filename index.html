@@ -114,11 +114,35 @@
 
   /* Slowest unit banner */
   .slowest-banner { background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:6px 12px; font-size:12px; color:#92400e; font-weight:600; margin-top:8px; line-height:1.5; }
+  .login-btn { background:#ebf8ff; border:1.5px solid #bee3f8; border-radius:8px; padding:3px 12px; font-family:'Sarabun',sans-serif; font-size:12px; font-weight:600; color:#2b6cb0; cursor:pointer; margin-left:6px; }
+  .login-btn.on { background:#f0fff4; border-color:#c6f6d5; color:#276749; }
+  .login-modal { position:fixed; inset:0; background:rgba(26,32,44,0.45); display:none; align-items:center; justify-content:center; z-index:2000; }
+  .login-modal.show { display:flex; }
+  .login-box { background:#fff; border-radius:16px; padding:24px 28px; width:300px; box-shadow:0 10px 30px rgba(0,0,0,0.15); font-family:'Sarabun',sans-serif; }
+  .login-box h3 { margin:0 0 14px; font-size:16px; color:#2d3748; }
+  .login-box input { width:100%; box-sizing:border-box; padding:8px 10px; margin-bottom:10px; border:1.5px solid #e2e8f0; border-radius:8px; font-family:inherit; font-size:14px; }
+  .login-box .row { display:flex; gap:8px; justify-content:flex-end; margin-top:4px; }
+  .login-box button { padding:6px 16px; border-radius:8px; border:none; font-family:inherit; font-weight:600; cursor:pointer; }
+  .login-box .ok { background:#4299e1; color:#fff; } .login-box .cancel { background:#edf2f7; color:#4a5568; }
+  .login-err { color:#e53e3e; font-size:12px; min-height:16px; margin-bottom:6px; }
+  .sub-status-only { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; font-size:12px; }
 </style>
 </head>
 <body>
 
 <!-- Loading overlay -->
+<div class="login-modal" id="loginModal">
+  <div class="login-box">
+    <h3>🔒 เข้าสู่ระบบเพื่อดูข้อมูลทั้งหมด</h3>
+    <input id="loginUser" placeholder="User" autocomplete="off">
+    <input id="loginPass" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="login-err" id="loginErr"></div>
+    <div class="row">
+      <button class="cancel" onclick="closeLogin()">ยกเลิก</button>
+      <button class="ok" onclick="doLogin()">เข้าสู่ระบบ</button>
+    </div>
+  </div>
+</div>
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
   <p class="loading-text">กำลังโหลดข้อมูลจาก Google Drive...</p>
@@ -131,6 +155,7 @@
     &nbsp;|&nbsp;
     <span id="updateTime">กำลังโหลด...</span>
     <button class="refresh-btn" onclick="loadAllData()">🔄 รีเฟรช</button>
+    <button class="login-btn" id="loginBtn" onclick="onLoginBtn()">🔒 ดูข้อมูลทั้งหมด</button>
   </p>
 </div>
 
@@ -513,6 +538,41 @@ function toggleSub(sid, btn) {
   if (arrow) arrow.classList.toggle('open', isOpen);
 }
 
+// ─── AUTH (client-side เท่านั้น) ─────────────────────────────────────
+let FULL = false;
+try { FULL = sessionStorage.getItem('st_full') === '1'; } catch(e) {}
+function updateLoginBtn() {
+  const b = document.getElementById('loginBtn');
+  if (!b) return;
+  b.textContent = FULL ? '🔓 ออกจากระบบ' : '🔒 ดูข้อมูลทั้งหมด';
+  b.classList.toggle('on', FULL);
+}
+function onLoginBtn() {
+  if (FULL) {
+    FULL = false;
+    try { sessionStorage.removeItem('st_full'); } catch(e) {}
+    updateLoginBtn(); renderAll();
+  } else {
+    document.getElementById('loginErr').textContent = '';
+    document.getElementById('loginUser').value = '';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginModal').classList.add('show');
+    document.getElementById('loginUser').focus();
+  }
+}
+function closeLogin() { document.getElementById('loginModal').classList.remove('show'); }
+function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  if (u === 'VIP01' && p === 'VIP01') {
+    FULL = true;
+    try { sessionStorage.setItem('st_full', '1'); } catch(e) {}
+    closeLogin(); updateLoginBtn(); renderAll();
+  } else {
+    document.getElementById('loginErr').textContent = 'User หรือ Password ไม่ถูกต้อง';
+  }
+}
+
 // ─── MAIN RENDER ─────────────────────────────────────────────────────
 function renderAll() {
   // Reset filter state
@@ -536,7 +596,7 @@ function renderAll() {
     <div class="card done"><div class="num">${dc}</div><div class="label">✅ เสร็จแล้ว</div></div>
     <div class="card active"><div class="label">⚡ ขั้นตอนปัจจุบัน</div><div class="step-name">${activeStep ? activeStep.name : '—'}</div></div>
     <div class="card wait"><div class="num">${wc}</div><div class="label">⬜ รอดำเนินการ</div></div>
-    <div class="card days"><div class="num">${td}</div><div class="label">📅 วันรวม</div></div>`;
+    ${FULL ? `<div class="card days"><div class="num">${td}</div><div class="label">📅 วันรวม</div></div>` : ''}`;
   document.getElementById('pPct').textContent = pct + '%';
   document.getElementById('pFill').style.width = pct + '%';
 
@@ -551,7 +611,7 @@ function renderAll() {
     if (step.dateSend)    meta += `<span class="meta-item">🏁 วันที่เสร็จ: ${step.dateSend}</span>`;
     if (step.updatedBy)   meta += `<span class="meta-item">👤 ${step.updatedBy}</span>`;
     const resp  = step.responsible ? `<span class="resp-tag">🏢 ${step.responsible}</span>` : '';
-    const daysH = step.days != null ? `<span class="days-badge">${step.days} วัน</span>` : '';
+    const daysH = (FULL && step.days != null) ? `<span class="days-badge">${step.days} วัน</span>` : '';
     const liveLabel = st === 'active' ? '<div class="active-label">🔴 LIVE</div>' : '';
 
     // Sub section for any step that has subs
@@ -573,7 +633,13 @@ function renderAll() {
         ? `<div class="slowest-banner">🐢 ช้าที่สุด (${slowInfo.count} หน่วย${slowInfo.count>1?', วันเดียวกัน':''}): ${slowInfo.names.join(', ')}</div>`
         : '';
 
-      subSec = slowBanner + `
+      if (!FULL) {
+        subSec = `<div class="sub-status-only">
+            <div class="mini-card mc-done">✅ เสร็จแล้ว ${dc2}</div>
+            <div class="mini-card mc-active">⚡ กำลังดำเนินการ ${ac2}</div>
+            <div class="mini-card mc-wait">⬜ รอดำเนินการ ${wc2}</div>
+          </div>`;
+      } else subSec = slowBanner + `
         <button class="sub-toggle-btn" onclick="toggleSub(${sid},this)">
           <span>📋 รายละเอียดหน่วยงาน</span>
           <div class="sub-mini-summary" style="display:flex;gap:6px;margin:0;">
@@ -627,6 +693,7 @@ function renderAll() {
 }
 
 // ─── INIT ────────────────────────────────────────────────────────────
+updateLoginBtn();
 loadAllData();
 </script>
 </body>
