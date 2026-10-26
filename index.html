@@ -341,9 +341,18 @@ function csvToData(rows, roundKey) {
     else if (step.subs.some(s => s.status === 'done' || s.status === 'active')) step.status = 'active';
     else step.status = 'wait';
     // คำนวณจำนวนวันจากหน่วยงานที่ส่งช้าที่สุด
-    // (นับจาก dateReceive ของ step ถึง dateSend ของ sub ที่ช้าสุด)
+    // startDate: ใช้ dateReceive ของ step ก่อน ถ้าไม่มีให้ใช้ dateReceive ของ sub ที่เร็วที่สุดแทน
     const doneSubs = step.subs.filter(s => s.status === 'done' && s.dateSend);
-    const startDate = step.dateReceive ? parseThaiDate(step.dateReceive) : null;
+    let startDate = step.dateReceive ? parseThaiDate(step.dateReceive) : null;
+    if (!startDate) {
+      // หา dateReceive ที่เร็วที่สุดใน subs
+      step.subs.forEach(s => {
+        if (s.dateReceive) {
+          const d = parseThaiDate(s.dateReceive);
+          if (d && (!startDate || d < startDate)) startDate = d;
+        }
+      });
+    }
     if (doneSubs.length && startDate) {
       let maxSendDate = null;
       doneSubs.forEach(s => {
@@ -353,8 +362,9 @@ function csvToData(rows, roundKey) {
       if (maxSendDate) {
         step.days = Math.round((maxSendDate - startDate) / 86400000);
       }
-    } else if (step.status === 'active' && step.dateReceive) {
-      step.days = daysFromToday(step.dateReceive);
+    } else if (step.status === 'active' && startDate) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      step.days = Math.round((today - startDate) / 86400000);
     }
   }
 
