@@ -278,7 +278,11 @@ function csvToData(rows, roundKey) {
 
     const dateReceive = normDate(row[2]);
     const dateSend    = normDate(row[3]);
-    const status      = (row[4] || '').trim().toLowerCase() || 'wait';
+    const rawStatus   = (row[4] || '').trim().toLowerCase() || 'wait';
+    // Auto-upgrade: มีวันเริ่มแต่ยังไม่มีวันเสร็จ → active (ไม่ว่า CSV จะระบุ wait ไว้)
+    const status = rawStatus === 'done' ? 'done'
+                 : (dateReceive && !dateSend) ? 'active'
+                 : rawStatus;
     const responsible = (row[6] || '').trim();
     const updatedBy   = (row[7] || '').trim() || null;
 
