@@ -607,8 +607,8 @@ function renderAll() {
     const icon = st === 'done' ? '✓' : step.id;
 
     let meta = '';
-    if (step.dateReceive) meta += `<span class="meta-item">📅 วันที่เริ่ม: ${step.dateReceive}</span>`;
-    if (step.dateSend)    meta += `<span class="meta-item">🏁 วันที่เสร็จ: ${step.dateSend}</span>`;
+    if (FULL && step.dateReceive) meta += `<span class="meta-item">📅 วันที่เริ่ม: ${step.dateReceive}</span>`;
+    if (FULL && step.dateSend)    meta += `<span class="meta-item">🏁 วันที่เสร็จ: ${step.dateSend}</span>`;
     if (step.updatedBy)   meta += `<span class="meta-item">👤 ${step.updatedBy}</span>`;
     const resp  = step.responsible ? `<span class="resp-tag">🏢 ${step.responsible}</span>` : '';
     const daysH = (FULL && step.days != null) ? `<span class="days-badge">${step.days} วัน</span>` : '';
